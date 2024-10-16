@@ -1,0 +1,54 @@
+qtdNumPseudoAleatorios: 100000
+semente: 7
+
+chegada: 2.0
+idFilaChegada: 0
+
+filas:
+  - idFila: 0
+    servidores: 1
+    capacidade: -1
+    tempoChegadaMin: 2.0
+    tempoChegadaMax: 4.0
+    tempoAtendimentoMin: 1.0
+    tempoAtendimentoMax: 2.0
+    probabilidadeSaida: -1.0
+
+  - idFila: 1
+    servidores: 2
+    capacidade: 5
+    tempoChegadaMin: -1
+    tempoChegadaMax: -1
+    tempoAtendimentoMin: 4.0
+    tempoAtendimentoMax: 8.0
+    probabilidadeSaida: 0.2
+
+  - idFila: 2
+    servidores: 2
+    capacidade: 10
+    tempoChegadaMin: -1
+    tempoChegadaMax: -1
+    tempoAtendimentoMin: 5.0
+    tempoAtendimentoMax: 15.0
+    probabilidadeSaida: 0.3
+
+ligacoes:
+  - idOrigem: 0
+    idDestino: 1
+    probabilidade: 0.8
+
+  - idOrigem: 0
+    idDestino: 2
+    probabilidade: 0.2
+
+  - idOrigem: 1
+    idDestino: 0
+    probabilidade: 0.3
+
+  - idOrigem: 1
+    idDestino: 2
+    probabilidade: 0.5
+
+  - idOrigem: 2
+    idDestino: 1
+    probabilidade: 0.7
