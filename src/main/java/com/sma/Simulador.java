@@ -36,7 +36,7 @@ public class Simulador {
                 case PASSAGEM -> passagem(evento);
             }
         }
-        printaSimulacao();
+        imprimirEstatisticasDeCadaFila();
     }
 
     private void iniciaFilas(App.Config configSimulador) {
@@ -167,18 +167,9 @@ public class Simulador {
         tempoGlobal = evento.getTempo();
     }
 
-    private void printaSimulacao() {
-        System.out.println("Tempo Global: " + tempoGlobal + "\n");
-        System.out.println("Escalonador: ");
-        System.out.println(scheduler.toString());
-        System.out.println("\n");
-        imprimirEstatisticasDeCadaFila();
-    }
-
     private void imprimirEstatisticasDeCadaFila() {
         for (Fila fila : filas) {
             System.out.println("Fila " + fila.getIdFila());
-            System.out.println("\t" + "Dados por estado");
             for (int estado = 0; estado < 6; estado++) {
                 System.out.println("Estado " + estado);
                 System.out.println("Probabilidade: " + (fila.probabilidadeDoEstado(estado, tempoGlobal) * 100) + "%");
