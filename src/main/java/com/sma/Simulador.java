@@ -9,7 +9,7 @@ import java.util.Queue;
 
 public class Simulador {
     private double tempoGlobal;
-    private GeradorNumPseudoaleatorio geradorNumPseudoaleatorio = new GeradorNumPseudoaleatorio();
+    private GeradorPseudoNum geradorNumPseudoaleatorio = new GeradorPseudoNum();
     private ArrayList<Evento> scheduler = new ArrayList<>();
     private ArrayList<Fila> filas = new ArrayList<>();
     private ArrayList<App.Ligacao> ligacoes = new ArrayList<>();
@@ -20,26 +20,26 @@ public class Simulador {
         geradorNumPseudoaleatorio.semente = configSimulador.getSemente();
         int count = configSimulador.getQtdNumPseudoAleatorios();
         while (count > 0) {
-            listPseudoNum.add(geradorNumPseudoaleatorio.gerarNumPseudoaleatorio());
+            listPseudoNum.add(geradorNumPseudoaleatorio.getPseudoNum());
             count--;
         }
 
-        iniciaFilas(configSimulador);
+        inicializa(configSimulador);
         Evento primeiro = new Evento(configSimulador.getChegada(), TipoEvento.CHEGADA, configSimulador.getIdFilaChegada());
         scheduler.add(primeiro);
 
         while (!listPseudoNum.isEmpty()) {
-            Evento evento = getNextEvento();
+            Evento evento = proxEvento();
             switch (evento.getTipo()) {
                 case CHEGADA -> chegada(evento);
                 case SAIDA -> saida(evento);
                 case PASSAGEM -> passagem(evento);
             }
         }
-        imprimirEstatisticasDeCadaFila();
+        print();
     }
 
-    private void iniciaFilas(App.Config configSimulador) {
+    private void inicializa(App.Config configSimulador) {
         for (App.ConfigFila novaFila : configSimulador.getFilas()) {
             Fila fila;
             if (novaFila.getTempoChegadaMin() == -1 || novaFila.getTempoChegadaMax() == -1) {
@@ -59,20 +59,20 @@ public class Simulador {
     private void chegada(Evento evento) {
         Fila filaEvento = filas.get(evento.getIdFilaOrigem());
         somaTempo(evento);
-        if (filaEvento.cabeMaisUmElemento()) {
+        if (filaEvento.fit()) {
             filaEvento.push("x");
             if (filaEvento.getStatus() <= filaEvento.getServidores()) {
                 int idDestino = getDestino(filaEvento.getIdFila());
                 Evento aux = new Evento(0, idDestino >= 0 ? TipoEvento.PASSAGEM : TipoEvento.SAIDA, evento.getIdFilaOrigem());
-                aux.setIdFilaDestino(idDestino);
-                agendarEvento(aux);
+                aux.setFilaDestino(idDestino);
+                marcaEvento(aux);
             }
         } else {
-            filaEvento.addPerda();
+            filaEvento.addLoss();
         }
         Evento aux = new Evento(0, TipoEvento.CHEGADA, evento.getIdFilaOrigem());
-        aux.setIdFilaDestino(evento.getIdFilaOrigem());
-        agendarEvento(aux);
+        aux.setFilaDestino(evento.getIdFilaOrigem());
+        marcaEvento(aux);
     }
 
     private void saida(Evento evento) {
@@ -82,8 +82,8 @@ public class Simulador {
         if (filaEvento.getStatus() >= filaEvento.getServidores()) {
             int idDestino = getDestino(filaEvento.getIdFila());
             Evento aux = new Evento(0, idDestino >= 0 ? TipoEvento.PASSAGEM : TipoEvento.SAIDA, evento.getIdFilaOrigem());
-            aux.setIdFilaDestino(idDestino);
-            agendarEvento(aux);
+            aux.setFilaDestino(idDestino);
+            marcaEvento(aux);
         }
     }
 
@@ -95,29 +95,29 @@ public class Simulador {
         if (filaEventoOrigem.getStatus() >= filaEventoOrigem.getServidores()) {
             int idDestino = getDestino(filaEventoOrigem.getIdFila());
             Evento aux = new Evento(0, idDestino >= 0 ? TipoEvento.PASSAGEM : TipoEvento.SAIDA, evento.getIdFilaOrigem());
-            aux.setIdFilaDestino(idDestino);
-            agendarEvento(aux);
+            aux.setFilaDestino(idDestino);
+            marcaEvento(aux);
         }
-        if (filaEventoDestino.cabeMaisUmElemento()) {
+        if (filaEventoDestino.fit()) {
             filaEventoDestino.push("x");
             if (filaEventoDestino.getStatus() <= filaEventoDestino.getServidores()) {
                 int idDestino = getDestino(filaEventoDestino.getIdFila());
                 Evento aux = new Evento(0, idDestino >= 0 ? TipoEvento.PASSAGEM : TipoEvento.SAIDA, evento.getIdFilaDestino());
-                aux.setIdFilaDestino(idDestino);
-                agendarEvento(aux);
+                aux.setFilaDestino(idDestino);
+                marcaEvento(aux);
             }
         } else {
-            filaEventoDestino.addPerda();
+            filaEventoDestino.addLoss();
         }
     }
 
-    private void agendarEvento(Evento evento) {
-        scheduler.add(calcularTempoAgendado(evento));
+    private void marcaEvento(Evento evento) {
+        scheduler.add(calculaTempo(evento));
     }
 
-    private Evento calcularTempoAgendado(Evento evento) {
+    private Evento calculaTempo(Evento evento) {
         Fila filaEvento = filas.get(evento.getIdFilaOrigem());
-        double numPseudoaleatorio = geradorNumPseudoaleatorio.gerarNumPseudoaleatorio();
+        double numPseudoaleatorio = geradorNumPseudoaleatorio.getPseudoNum();
         double tempo = switch (evento.getTipo()) {
             case CHEGADA -> filaEvento.getTempoChegadaMin() + ((filaEvento.getTempoChegadaMax() - filaEvento.getTempoChegadaMin()) * numPseudoaleatorio);
             case PASSAGEM, SAIDA -> filaEvento.getTempoAtendimentoMin() + ((filaEvento.getTempoAtendimentoMax() - filaEvento.getTempoAtendimentoMin()) * numPseudoaleatorio);
@@ -126,7 +126,7 @@ public class Simulador {
         return evento;
     }
 
-    private Evento getNextEvento() {
+    private Evento proxEvento() {
         Evento proximo = scheduler.get(0);
         int index = 0;
         for (int indice = 0; indice < scheduler.size(); indice++) {
@@ -167,21 +167,21 @@ public class Simulador {
         tempoGlobal = evento.getTempo();
     }
 
-    private void imprimirEstatisticasDeCadaFila() {
+    private void print() {
         for (Fila fila : filas) {
             System.out.println("Fila " + fila.getIdFila());
             for (int estado = 0; estado < 6; estado++) {
                 System.out.println("Estado " + estado);
                 System.out.println("Probabilidade: " + (fila.probabilidadeDoEstado(estado, tempoGlobal) * 100) + "%");
                 System.out.println("População: " + fila.populacaoDoEstado(estado, tempoGlobal) + " clientes");
-                System.out.println("Vazão: " + fila.vazaoDoEstadoPorHora(estado, tempoGlobal) + " clientes por hora");
+                System.out.println("Vazão: " + fila.vazaoDoEstadoPorHora(estado, tempoGlobal) + " clientes/hora");
                 System.out.println("Utilização: " + (fila.utilizacaoDoEstado(estado, tempoGlobal) * 100) + "%");
             }
             System.out.println("Totais");
             System.out.println("População: " + fila.populacao(tempoGlobal) + " clientes");
-            System.out.println("Vazão: " + fila.vazaoPorHora(tempoGlobal) + " clientes por hora");
+            System.out.println("Vazão: " + fila.vazaoPorHora(tempoGlobal) + " clientes/hora");
             System.out.println("Utilização: " + (fila.utilizacao(tempoGlobal) * 100) + "%");
-            System.out.println("Demora: " + fila.tempoDeRespostaEmHoras(tempoGlobal) + " hora(s)");
+            System.out.println("Demora: " + fila.tempoDeResposta(tempoGlobal) + " hora(s)");
             System.out.println("Loss: " + fila.getLoss());
         }
         System.out.println("Tempo total simulacao: "+tempoGlobal);
@@ -234,10 +234,10 @@ public class Simulador {
         public double getTempoChegadaMax() { return tempoChegadaMax; }
         public double getProbabilidadeSaida() { return probabilidadeSaida; }
         public void setProbabilidadeSaida(double probabilidadeSaida) { this.probabilidadeSaida = probabilidadeSaida; }
-        public void addPerda() { perdas++; }
+        public void addLoss() { perdas++; }
         public int getLoss() { return perdas; }
-        public boolean cabeMaisUmElemento() { return getStatus() < getCapacidade() || getCapacidade() == -1; }
-        public boolean temServidoresOciosos() { return getStatus() < getServidores(); }
+        public boolean fit() { return getStatus() < getCapacidade() || getCapacidade() == -1; }
+
         public int push(String elemento) { elementos.add(elemento); return elementos.size(); }
         public String pop() { return elementos.remove(0); }
 
@@ -256,12 +256,8 @@ public class Simulador {
             return Math.min(estado, capacidade) * taxaMediaDeAtendimentoDaFilaPorHora();
         }
 
-        public double taxaMediaDeAtendimentoDaFila() {
-            return capacidade / (tempoAtendimentoMax - tempoAtendimentoMin);
-        }
-
         public double taxaMediaDeAtendimentoDaFilaPorHora() {
-            return taxaMediaDeAtendimentoDaFila() * 60;
+            return capacidade / (tempoAtendimentoMax - tempoAtendimentoMin) * 60;
         }
 
         public double populacaoDoEstado(int estado, double tempoGlobal) {
@@ -297,7 +293,7 @@ public class Simulador {
             return utilizacao;
         }
 
-        public double tempoDeRespostaEmHoras(double tempoGlobal) {
+        public double tempoDeResposta(double tempoGlobal) {
             return populacao(tempoGlobal) / vazaoPorHora(tempoGlobal);
         }
     }
@@ -321,16 +317,16 @@ public class Simulador {
         public int getIdFilaOrigem() { return idFilaOrigem; }
         public void setIdFilaOrigem(int idFilaOrigem) { this.idFilaOrigem = idFilaOrigem; }
         public int getIdFilaDestino() { return idFilaDestino; }
-        public void setIdFilaDestino(int idFilaDestino) { this.idFilaDestino = idFilaDestino; }
+        public void setFilaDestino(int idFilaDestino) { this.idFilaDestino = idFilaDestino; }
     }
 
-    public static class GeradorNumPseudoaleatorio {
+    public static class GeradorPseudoNum {
         double a = 65;
         double c = 518;
         double M = 91481295;
         double semente = 7;
 
-        public double gerarNumPseudoaleatorio() {
+        public double getPseudoNum() {
             semente = ((a * semente + c) % M);
             return normalizar();
         }
