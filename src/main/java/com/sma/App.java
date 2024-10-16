@@ -9,11 +9,11 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         Simulador simulador = new Simulador();
-        Config configSimulador = lerArquivoYaml();
+        Config configSimulador = yaml();
         simulador.iniciaSimulacao(configSimulador);
     }
 
-    public static Config lerArquivoYaml() throws IOException {
+    public static Config yaml() throws IOException {
         var mapper = new ObjectMapper(new YAMLFactory());
         return mapper.readValue(new File("config.yml"), Config.class);
     }

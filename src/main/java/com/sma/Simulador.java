@@ -193,7 +193,7 @@ public class Simulador {
             System.out.println("Demora: " + fila.tempoDeRespostaEmHoras(tempoGlobal) + " hora(s)");
             System.out.println("Loss: " + fila.getLoss());
         }
-        System.out.println(tempoGlobal);
+        System.out.println("Tempo total simulacao: "+tempoGlobal);
     }
 
     public static class Fila {
