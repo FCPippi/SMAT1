@@ -15,7 +15,7 @@ public class App {
 
     public static Config lerArquivoYaml() throws IOException {
         var mapper = new ObjectMapper(new YAMLFactory());
-        return mapper.readValue(new File("configSimulador.yml"), Config.class);
+        return mapper.readValue(new File("config.yml"), Config.class);
     }
 
     public static class Config {

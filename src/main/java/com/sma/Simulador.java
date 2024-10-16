@@ -179,7 +179,7 @@ public class Simulador {
         for (Fila fila : filas) {
             System.out.println("Fila " + fila.getIdFila());
             System.out.println("\t" + "Dados por estado");
-            for (int estado = 0; estado < fila.getAcumulador().length; estado++) {
+            for (int estado = 0; estado < 6; estado++) {
                 System.out.println("Estado " + estado);
                 System.out.println("Probabilidade: " + (fila.probabilidadeDoEstado(estado, tempoGlobal) * 100) + "%");
                 System.out.println("População: " + fila.populacaoDoEstado(estado, tempoGlobal) + " clientes");
@@ -193,6 +193,7 @@ public class Simulador {
             System.out.println("Demora: " + fila.tempoDeRespostaEmHoras(tempoGlobal) + " hora(s)");
             System.out.println("Loss: " + fila.getLoss());
         }
+        System.out.println(tempoGlobal);
     }
 
     public static class Fila {
@@ -330,17 +331,12 @@ public class Simulador {
         public void setIdFilaOrigem(int idFilaOrigem) { this.idFilaOrigem = idFilaOrigem; }
         public int getIdFilaDestino() { return idFilaDestino; }
         public void setIdFilaDestino(int idFilaDestino) { this.idFilaDestino = idFilaDestino; }
-
-        @Override
-        public String toString() {
-            return "[" + tipo + "] - tempo: " + tempo + " fila: " + idFilaOrigem + " filaDestino: " + idFilaDestino + "\n";
-        }
     }
 
     public static class GeradorNumPseudoaleatorio {
         double a = 65;
-        double c = 88;
-        double M = 982397845;
+        double c = 518;
+        double M = 91481295;
         double semente = 7;
 
         public double gerarNumPseudoaleatorio() {
